@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: grow-bangladesh-api-staging
+    runtime: node
+    rootDir: grow-bangladesh-backend
+    buildCommand: npm install --no-audit --no-fund
+    preDeployCommand: npm run migrate
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: HOST
+        value: 0.0.0.0
+      - key: ALLOW_DEV_USER_HEADER
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: grow-bangladesh-db-staging
+          property: connectionString
+      - key: DATABASE_SSL
+        value: "true"
+      - key: JWT_SECRET
+        sync: false
+      - key: DEMO_SEED_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+databases:
+  - name: grow-bangladesh-db-staging
+    databaseName: grow_bangladesh
+    user: grow_bangladesh_api

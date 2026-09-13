@@ -1,0 +1,2035 @@
+openapi: 3.1.0
+info:
+  title: Invest in Bd API
+  version: 0.15.0
+  description: MVP contract including Investor pack (home, Approved referral reward payout requests, apply-to-shares, support messages, KYC change reason), Super Admin pack, and Project Owner pack. Integer poisha + bps. Staging only. fundsMoved:false. No wallet language.
+servers:
+  - url: https://api.example.invalid/v1
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      summary: Health check
+      responses:
+        '200':
+          description: Service health
+  /auth/register:
+    post:
+      security: []
+      summary: Register a new user (investor or project owner)
+      responses:
+        '201':
+          description: Pending verification user created and OTP issued
+  /auth/login:
+    post:
+      security: []
+      summary: Login with email/mobile and password
+      responses:
+        '200':
+          description: Access and refresh tokens, or OTP challenge for pending users
+  /auth/otp/verify:
+    post:
+      security: []
+      summary: Verify an OTP challenge
+      responses:
+        '200':
+          description: OTP accepted; session or reset token issued
+  /auth/token/refresh:
+    post:
+      security: []
+      summary: Rotate refresh token and issue a new access token
+      responses:
+        '200':
+          description: Rotated tokens
+  /auth/logout:
+    post:
+      summary: Revoke refresh token / active sessions
+      responses:
+        '200':
+          description: Logged out
+  /auth/password/forgot:
+    post:
+      security: []
+      summary: Request password reset OTP
+      responses:
+        '200':
+          description: Generic acceptance response
+  /auth/password/reset:
+    post:
+      security: []
+      summary: Reset password with a one-time reset token
+      responses:
+        '200':
+          description: Password updated and sessions revoked
+  /auth/me:
+    get:
+      summary: Current authenticated user
+      responses:
+        '200':
+          description: User profile and roles
+  /auth/sessions/revoke:
+    post:
+      summary: Revoke all sessions for a user
+      x-roles: [super_admin, support]
+      responses:
+        '200':
+          description: Sessions revoked
+  /categories:
+    get:
+      security: []
+      summary: List active project categories for browse filters and owner create
+      responses:
+        '200':
+          description: Active categories ordered by displayOrder
+  /admin/categories:
+    get:
+      summary: List all categories including inactive
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - name: includeInactive
+          in: query
+          schema: { type: boolean, default: true }
+      responses:
+        '200':
+          description: Admin category list
+    post:
+      summary: Create a project category
+      x-roles: [super_admin, project_reviewer]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+      responses:
+        '201':
+          description: Category created
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/categories/reorder:
+    post:
+      summary: Reorder all categories by full ordered id list
+      x-roles: [super_admin, project_reviewer]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderedIds]
+              properties:
+                orderedIds:
+                  type: array
+                  minItems: 1
+                  items: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Categories reordered
+  /admin/categories/{categoryId}:
+    post:
+      summary: Update category fields (name, slug, description, iconUrl, displayOrder)
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+      responses:
+        '200':
+          description: Category updated
+        '404':
+          description: Category not found
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/categories/{categoryId}/activate:
+    post:
+      summary: Activate a category
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '200':
+          description: Category activated
+  /admin/categories/{categoryId}/deactivate:
+    post:
+      summary: Deactivate a category (hidden from owner create / public list)
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '200':
+          description: Category deactivated
+  /me/profile:
+    get:
+      summary: Get authenticated investor profile (completion + KYC + verification flags)
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Investor profile
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (non-investor)
+    patch:
+      summary: Update authenticated investor profile fields
+      x-roles: [investor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestorProfilePatch'
+      responses:
+        '200':
+          description: Updated profile
+        '400':
+          description: Validation error
+  /me/bank:
+    get:
+      summary: Get masked bank details for authenticated investor
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Masked bank details (last4 only) or null
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    put:
+      summary: Create or replace investor bank / optional MFS details (encrypted at rest)
+      x-roles: [investor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestorBankUpsert'
+      responses:
+        '200':
+          description: Masked bank details; verificationStatus pending (resets if previously verified)
+        '400':
+          description: Validation error
+  /admin/investors/{investorId}/bank:
+    get:
+      summary: Finance/admin view of masked investor bank details
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - $ref: '#/components/parameters/InvestorId'
+      responses:
+        '200':
+          description: Masked bank details
+        '403':
+          description: Forbidden (including project_owner)
+  /admin/investors/{investorId}/bank/verify:
+    post:
+      summary: Set bank verification status (verified/rejected/pending)
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - $ref: '#/components/parameters/InvestorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [verified, rejected, pending] }
+                note: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Updated masked bank details
+        '403':
+          description: Forbidden (including project_owner)
+  /admin/investors/{investorId}/kyc:
+    post:
+      summary: Update investor KYC status
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/InvestorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [not_started, pending, approved, rejected] }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Updated profile
+  /projects:
+    get:
+      security: []
+      summary: List published (marketplace-visible) projects only
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+          description: Optional category slug filter
+        - name: termMinDays
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: termMaxDays
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: unitPriceMinPoisha
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: unitPriceMaxPoisha
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: status
+          in: query
+          schema: { type: string }
+          description: Marketplace status filter (published,paused,funding_closed,active) comma-separated
+      responses:
+        '200':
+          description: Published / paused / funding_closed / active projects
+    post:
+      summary: Create a project draft (legacy alias of POST /owner/projects)
+      x-roles: [project_owner]
+      responses:
+        '201':
+          description: Draft created
+  /projects/{slug}:
+    get:
+      security: []
+      summary: Get a published project by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Published project detail with financial terms + projected-return disclaimer
+        '404':
+          description: Not found or not publicly visible
+  /projects/{projectId}/investment-preview:
+    get:
+      security: []
+      summary: Preview investment amounts for N units (integer poisha + bps)
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: units
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        '200':
+          description: Calculation preview with projected-return disclaimer
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /investments/preview:
+    post:
+      security: []
+      summary: Preview investment calculation (by projectId or raw unit/fee inputs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectId: { type: string, format: uuid }
+                units: { type: integer, minimum: 1 }
+                unitInvestmentPoisha: { type: integer, minimum: 1 }
+                administrationFeeBps: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: Calculation preview
+  /owner/projects:
+    get:
+      summary: List projects owned by the authenticated owner
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: Owner projects
+    post:
+      summary: Create an owner project draft (incomplete drafts allowed)
+      x-roles: [project_owner]
+      responses:
+        '201':
+          description: Draft created
+  /owner/projects/{projectId}:
+    get:
+      summary: Get own project
+      x-roles: [project_owner]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project detail
+    patch:
+      summary: Edit own draft or changes_requested project
+      x-roles: [project_owner]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Updated project
+        '403':
+          description: Forbidden field or not owner
+        '409':
+          description: Not editable in current status
+  /owner/projects/{projectId}/submit:
+    post:
+      summary: Submit draft for review
+      x-roles: [project_owner]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: submitted_for_review
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /owner/projects/{projectId}/resubmit:
+    post:
+      summary: Resubmit after changes_requested
+      x-roles: [project_owner]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: resubmitted
+  /owner/projects/{projectId}/versions:
+    get:
+      summary: Version history for own project
+      x-roles: [project_owner]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Version snapshots
+  /admin/projects:
+    get:
+      summary: List all projects or review queue
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: reviewQueue
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Admin project list
+    post:
+      summary: Admin create unpublished project
+      x-roles: [super_admin, project_reviewer]
+      responses:
+        '201':
+          description: Draft created
+  /admin/projects/{projectId}:
+    get:
+      summary: Admin get project
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project detail
+    patch:
+      summary: Admin edit unpublished project
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Updated
+  /admin/projects/{projectId}/request-changes:
+    post:
+      summary: Request changes (mandatory reason)
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: changes_requested
+  /admin/projects/{projectId}/reject:
+    post:
+      summary: Reject project (mandatory reason)
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: rejected
+  /admin/projects/{projectId}/approve:
+    post:
+      summary: Approve project (requires complete risk/terms/exit)
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: approved
+  /admin/projects/{projectId}/publish:
+    post:
+      summary: Publish an approved project (separate from approve)
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project published
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/projects/{projectId}/pause:
+    post:
+      summary: Pause funding on a published project
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: paused
+  /admin/projects/{projectId}/close-funding:
+    post:
+      summary: Close funding
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: funding_closed
+  /admin/projects/{projectId}/versions:
+    get:
+      summary: Admin version history / audit snapshots
+      x-roles: [super_admin, project_reviewer, auditor]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Version snapshots
+  /applications:
+    post:
+      summary: Apply for units in a published project (accepts terms version)
+      x-roles: [investor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [projectId, units, acceptedTermsVersion]
+              properties:
+                projectId: { type: string, format: uuid }
+                units: { type: integer, minimum: 1 }
+                acceptedTermsVersion: { type: integer, minimum: 1 }
+      responses:
+        '201':
+          description: Application submitted (linked to project terms version + project version number)
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /applications/mine:
+    get:
+      summary: List the authenticated investor's applications
+      x-roles: [investor]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Investor applications
+  /applications/mine/{applicationId}:
+    get:
+      summary: Get own application detail
+      x-roles: [investor]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200':
+          description: Application detail
+        '403':
+          description: Not the application owner
+  /applications/{applicationId}/resubmit:
+    post:
+      summary: Resubmit after changes_requested
+      x-roles: [investor]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                units: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Resubmitted
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /applications/{applicationId}/cancel:
+    post:
+      summary: Cancel own application before payment reservation
+      x-roles: [investor]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200':
+          description: Cancelled
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/applications/{applicationId}/approve:
+    post:
+      summary: Approve an application and reserve units
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200':
+          description: Application approved for payment (approved_payment_pending)
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/applications/{applicationId}/reject:
+    post:
+      summary: Reject an application with reason
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Rejected
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/applications/{applicationId}/request-changes:
+    post:
+      summary: Request changes on an application with reason
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Changes requested
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/applications/{applicationId}/start-review:
+    post:
+      summary: Mark application under_review
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200':
+          description: Under review
+  /admin/applications/{applicationId}:
+    get:
+      summary: Get application detail for staff review
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - $ref: '#/components/parameters/ApplicationId'
+      responses:
+        '200':
+          description: Application detail
+  /payments:
+    post:
+      summary: Submit a payment or manual-payment evidence
+      x-roles: [investor]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentSubmission'
+      responses:
+        '201':
+          description: Payment awaiting verification
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/payments:
+    get:
+      summary: List payments for finance review queues
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [verification_pending, verified, rejected], default: verification_pending }
+      responses:
+        '200':
+          description: Payment review queue
+  /admin/payments/{paymentId}/reject:
+    post:
+      summary: Reject a pending manual payment and release reserved units
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reviewNote]
+              properties:
+                reviewNote: { type: string, minLength: 3, maxLength: 1000 }
+      responses:
+        '200':
+          description: Payment rejected
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/applications:
+    get:
+      summary: List applications for compliance review (default review queue)
+      x-roles: [super_admin, compliance_reviewer]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, submitted, under_review, changes_requested, approved_payment_pending, rejected, expired, cancelled, payment_verification_pending, active, payment_rejected]
+      responses:
+        '200':
+          description: Application review queue
+  /owner/projects:
+    get:
+      summary: List projects owned by the authenticated project owner
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: Owner projects with funded unit totals
+  /investments:
+    get:
+      summary: List allocation/investment cards for the authenticated investor
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: investorId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: projectId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Investment allocations from PostgreSQL
+  /admin/payments/{paymentId}/verify:
+    post:
+      summary: Verify payment and atomically allocate units
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reviewNote]
+              properties:
+                reviewNote: { type: string, minLength: 3, maxLength: 1000 }
+      responses:
+        '200':
+          description: Payment verified and allocation activated
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /investments/{allocationId}:
+    get:
+      summary: Get share holding detail with projected return vs Approved distributions
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: |
+            Share holding detail. Fields include projectedAccruedReturnPoisha (non-guaranteed),
+            estimateLabel, projectionDisclaimer, confirmedProfitPoisha / approvedDistributions,
+            dailyProjectedReturnPoisha (= round(investment_poisha × annual_bps / 365 / 10000)),
+            withdrawable:false. Projections never become payable.
+  /investments/{allocationId}/exit-eligibility:
+    get:
+      summary: Check early-exit eligibility for a share holding
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: |
+            Eligibility including min hold days (default 180), elapsed days, estimated payable
+            (display only). Liquidity is not guaranteed. Own-only for investors.
+  /investments/{allocationId}/exit-requests:
+    get:
+      summary: List exit requests for a share holding
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Exit requests for the allocation (own-only for investors)
+    post:
+      summary: Submit an early-exit request
+      description: |
+        Investor submits exit for own allocation only after minimum holding period
+        (project minimum_exit_days or default 180). Liquidity is not guaranteed.
+        Sets allocation status to exit_requested. Does not move funds.
+      x-roles: [investor]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 2000 }
+                deductionPoisha: { type: integer, minimum: 0, description: Optional estimate deduction in poisha }
+      responses:
+        '201':
+          description: Exit request submitted without liquidity guarantee
+        '403':
+          description: Not owner of allocation
+        '409':
+          description: Hold period not met, allocation ineligible, or open exit already exists
+  /exit-requests:
+    get:
+      summary: List exit requests (investor own / staff any)
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: allocationId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: investorId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Exit request list
+  /exit-requests/{exitRequestId}:
+    get:
+      summary: Get one exit request
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: exitRequestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Exit request detail (may include display-only Exit payment)
+        '403':
+          description: Not owner
+  /exit-requests/{exitRequestId}/cancel:
+    post:
+      summary: Cancel own exit request before decision
+      x-roles: [investor]
+      parameters:
+        - name: exitRequestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Cancelled; allocation may return to active
+        '409':
+          description: Not cancelable in current status
+  /admin/exit-requests:
+    get:
+      summary: Admin/finance exit request review queue
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [submitted, under_review, approved_waiting_liquidity, approved, rejected, completed, cancelled, all]
+      responses:
+        '200':
+          description: Exit request queue
+  /admin/exit-requests/{exitRequestId}/start-review:
+    post:
+      summary: Start review of an exit request
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: exitRequestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Status under_review
+  /admin/exit-requests/{exitRequestId}/approve:
+    post:
+      summary: Approve exit request (optional liquidity wait)
+      description: |
+        Approval may set approved_waiting_liquidity when waitForLiquidity=true.
+        Moves allocation toward exit_processing. Does not pay money.
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: exitRequestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                waitForLiquidity: { type: boolean, default: false }
+                liquidityNote: { type: string, maxLength: 2000 }
+                decisionNote: { type: string, maxLength: 2000 }
+                deductionPoisha: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: Approved or approved_waiting_liquidity
+  /admin/exit-requests/{exitRequestId}/reject:
+    post:
+      summary: Reject exit request with reason
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: exitRequestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Rejected; allocation may return to active
+  /admin/exit-requests/{exitRequestId}/complete:
+    post:
+      summary: Complete exit and create display-only Exit payment record
+      description: |
+        Creates payouts row type early_exit status approved (display-only).
+        Does NOT move funds or enable gateways. Sets allocation to exited.
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: exitRequestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountPoisha: { type: integer, minimum: 1 }
+                decisionNote: { type: string, maxLength: 2000 }
+      responses:
+        '200':
+          description: Completed with Exit payment record (no funds moved)
+  /admin/allocations:
+    get:
+      summary: List share holdings (allocations) for Approved distribution declaration
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, matured, all], default: active }
+        - name: projectId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Allocation cards with projected vs confirmed profit fields
+  /admin/profit-confirmations:
+    get:
+      summary: List Approved distributions (admin/finance queue)
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: allocationId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Approved distribution records (no live payouts)
+  /admin/allocations/{allocationId}/profit-confirmations:
+    get:
+      summary: List Approved distributions for an allocation
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Approved distributions for the allocation
+    post:
+      summary: Declare Approved distribution (confirmed profit) for a period
+      description: |
+        Creates a profit_confirmations row (Approved distribution). Does NOT create payouts
+        or move money. Projections never auto-convert into Approved distributions.
+        Principal for any related projection math is investment_poisha (excludes admin fee).
+      x-roles: [super_admin, finance_officer]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [periodStart, periodEnd, confirmedProfitPoisha]
+              properties:
+                periodStart: { type: string, format: date }
+                periodEnd: { type: string, format: date }
+                confirmedProfitPoisha: { type: integer, minimum: 0, description: Integer poisha only }
+                notes: { type: string, maxLength: 2000 }
+                declarationNote: { type: string, maxLength: 2000 }
+                sourceReportId: { type: string, format: uuid, nullable: true }
+      responses:
+        '201':
+          description: Approved distribution created
+        '403':
+          description: Investor/owner or wrong role forbidden
+        '409':
+          description: Duplicate period or ineligible allocation
+  /investments/{allocationId}/approved-distributions:
+    get:
+      summary: List Approved distributions for a share holding (investor own-only)
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: allocationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Approved distributions (payable display only; payouts not enabled)
+        '403':
+          description: Not owner of this holding
+  /profit-confirmations/{confirmationId}:
+    get:
+      summary: Get one Approved distribution
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      parameters:
+        - name: confirmationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Approved distribution detail
+
+  /referrals/me:
+    get:
+      summary: Investor referral dashboard (my code, referred list, rewards)
+      operationId: getMyReferrals
+      x-roles: [investor]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Referral dashboard
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /referrals/code:
+    get:
+      summary: Ensure and return my referral code
+      operationId: ensureMyReferralCode
+      x-roles: [investor]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Referral code
+  /referrals/attach:
+    post:
+      summary: Attach a referral code to the current investor (once)
+      operationId: attachReferral
+      x-roles: [investor]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [referralCode]
+              properties:
+                referralCode: { type: string, minLength: 4, maxLength: 32 }
+      responses:
+        '201':
+          description: Referral attached
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /referral-rewards/{rewardId}:
+    get:
+      summary: Get referral reward detail
+      operationId: getReferralReward
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: rewardId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Referral reward
+  /admin/referral-settings:
+    get:
+      summary: Get fixed referral reward settings
+      operationId: getReferralSettings
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Settings
+    put:
+      summary: Update fixed referral reward (poisha)
+      operationId: updateReferralSettings
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [referralRewardPoisha]
+              properties:
+                referralRewardPoisha: { type: integer, minimum: 1, description: Fixed BDT reward in poisha }
+      responses:
+        '200':
+          description: Updated settings
+  /admin/referral-rewards:
+    get:
+      summary: Admin/finance referral reward review queue
+      operationId: listAdminReferralRewards
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, eligible, approved, paid, reversed, rejected] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500 }
+      responses:
+        '200':
+          description: Reward list
+  /admin/referral-rewards/{rewardId}/approve:
+    post:
+      summary: Approve eligible referral reward (display-only payout record)
+      operationId: approveReferralReward
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: rewardId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                decisionNote: { type: string, maxLength: 2000 }
+      responses:
+        '200':
+          description: Approved with display-only payout
+  /admin/referral-rewards/{rewardId}/reject:
+    post:
+      summary: Reject referral reward
+      operationId: rejectReferralReward
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: rewardId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Rejected
+  /admin/referral-rewards/{rewardId}/reverse:
+    post:
+      summary: Reverse referral reward (abuse / reversed payment)
+      operationId: reverseReferralReward
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: rewardId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Reversed
+
+  /owner/performance-reports:
+    get:
+      summary: List owner performance reports
+      operationId: listOwnerPerformanceReports
+      x-roles: [project_owner]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: projectId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string, enum: [submitted, under_review, approved, rejected] }
+      responses:
+        '200':
+          description: Owner performance reports
+  /owner/projects/{projectId}/performance-reports:
+    post:
+      summary: Submit performance report for own project
+      operationId: submitPerformanceReport
+      x-roles: [project_owner]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [periodStart, periodEnd, revenuePoisha, expensePoisha]
+              properties:
+                periodStart: { type: string, format: date }
+                periodEnd: { type: string, format: date }
+                revenuePoisha: { type: integer, minimum: 0 }
+                expensePoisha: { type: integer, minimum: 0 }
+                supportingDocumentKey: { type: string, maxLength: 500, nullable: true }
+                notes: { type: string, maxLength: 2000, nullable: true }
+      responses:
+        '201':
+          description: Performance report submitted
+  /admin/performance-reports:
+    get:
+      summary: Admin performance report review queue
+      operationId: listAdminPerformanceReports
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [submitted, under_review, approved, rejected] }
+        - name: projectId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Review queue
+  /admin/performance-reports/{reportId}/start-review:
+    post:
+      summary: Start reviewing a performance report
+      operationId: startPerformanceReportReview
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Under review
+  /admin/performance-reports/{reportId}/approve:
+    post:
+      summary: Approve performance report (optionally generate Approved distributions)
+      operationId: approvePerformanceReport
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                generateDistributions: { type: boolean, default: true }
+                reviewNote: { type: string, maxLength: 2000 }
+      responses:
+        '200':
+          description: Approved; may include generated Approved distributions
+  /admin/performance-reports/{reportId}/reject:
+    post:
+      summary: Reject performance report
+      operationId: rejectPerformanceReport
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Rejected
+  /admin/performance-reports/{reportId}/generate-distributions:
+    post:
+      summary: Generate Approved distributions from an approved performance report
+      operationId: generateDistributionsFromPerformanceReport
+      x-roles: [super_admin, finance_officer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Approved distributions created (pro-rata by investment_poisha)
+  /performance-reports/{reportId}:
+    get:
+      summary: Get performance report detail
+      operationId: getPerformanceReport
+      x-roles: [project_owner, super_admin, finance_officer, auditor]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Performance report
+  /investor/home:
+    get:
+      summary: Investor home metrics (investment, shares, Approved referral reward, maturity, referral share)
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Investor home payload
+  /investor/maturity-report:
+    get:
+      summary: Share maturity report for current investor
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Maturity report
+  /investor/referral-reward-payout-requests:
+    get:
+      summary: List my Approved referral reward payout requests (display-only)
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Payout request list
+    post:
+      summary: Request display-only payout of Approved referral reward to bank on file
+      x-roles: [investor]
+      responses:
+        '201':
+          description: Payout request created (fundsMoved false)
+  /admin/referral-reward-payout-requests:
+    get:
+      summary: Admin list of referral reward payout requests
+      x-roles: [super_admin, finance_officer]
+      responses:
+        '200':
+          description: Admin payout request queue
+  /admin/referral-reward-payout-requests/{id}/start-review:
+    post:
+      summary: Start review of referral reward payout request
+      x-roles: [super_admin, finance_officer]
+      responses:
+        '200':
+          description: Under review
+  /admin/referral-reward-payout-requests/{id}/approve:
+    post:
+      summary: Approve referral reward payout request
+      x-roles: [super_admin, finance_officer]
+      responses:
+        '200':
+          description: Approved
+  /admin/referral-reward-payout-requests/{id}/reject:
+    post:
+      summary: Reject referral reward payout request
+      x-roles: [super_admin, finance_officer]
+      responses:
+        '200':
+          description: Rejected
+  /admin/referral-reward-payout-requests/{id}/record-paid:
+    post:
+      summary: Record paid (display-only; fundsMoved false)
+      x-roles: [super_admin, finance_officer]
+      responses:
+        '200':
+          description: Paid recorded without live rails
+  /investor/referral-reward/apply-to-application:
+    post:
+      summary: Apply Approved referral reward toward share application (not a wallet)
+      x-roles: [investor]
+      responses:
+        '201':
+          description: Reward applied toward application
+  /investor/referrals/purchase-history:
+    get:
+      summary: Privacy-safe referred purchase history (masked email/phone)
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Masked purchase history
+  /investor/support/cases:
+    get:
+      summary: List my support cases
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Support cases
+    post:
+      summary: Create support case / message admin
+      x-roles: [investor]
+      responses:
+        '201':
+          description: Case created
+  /investor/support/cases/{id}:
+    get:
+      summary: Get support case with messages
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Case detail
+  /investor/support/cases/{id}/messages:
+    post:
+      summary: Add message to support case
+      x-roles: [investor]
+      responses:
+        '201':
+          description: Message added
+  /admin/support/cases:
+    get:
+      summary: Admin/support list cases
+      x-roles: [super_admin, support, compliance_reviewer]
+      responses:
+        '200':
+          description: Admin case queue
+  /admin/support/cases/{id}:
+    get:
+      summary: Admin get support case
+      x-roles: [super_admin, support, compliance_reviewer]
+      responses:
+        '200':
+          description: Case detail
+  /admin/support/cases/{id}/messages:
+    post:
+      summary: Admin reply to support case
+      x-roles: [super_admin, support, compliance_reviewer]
+      responses:
+        '201':
+          description: Staff message added
+  /admin/support/cases/{id}/close:
+    post:
+      summary: Close support case
+      x-roles: [super_admin, support, compliance_reviewer]
+      responses:
+        '200':
+          description: Case closed
+  /investor/project-owner-access-request:
+    post:
+      summary: Request project_owner dual-role access
+      x-roles: [investor]
+      responses:
+        '201':
+          description: Access request created
+  /investor/project-owner-access-requests:
+    get:
+      summary: List my project owner access requests
+      x-roles: [investor]
+      responses:
+        '200':
+          description: Access requests
+  /admin/project-owner-access-requests:
+    get:
+      summary: Admin list project owner access requests
+      x-roles: [super_admin, compliance_reviewer]
+      responses:
+        '200':
+          description: Access request queue
+  /admin/project-owner-access-requests/{id}/review:
+    post:
+      summary: Approve/reject project owner access (grants role on approve)
+      x-roles: [super_admin, compliance_reviewer]
+      responses:
+        '200':
+          description: Reviewed
+  /investor/available-payable:
+    get:
+      summary: Investor Available payable amount summary (not a wallet)
+      operationId: getInvestorAvailablePayable
+      x-roles: [investor, super_admin, finance_officer, auditor]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Available payable amount (display-only; payoutEnabled false)
+  /admin/audit-logs:
+    get:
+      summary: Read-only audit log visibility by action prefix
+      operationId: listAuditLogs
+      x-roles: [super_admin, finance_officer, auditor]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: prefix
+          in: query
+          description: Comma-separated prefixes (profit_, exit_, referral_, performance_report_, payment_)
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+      responses:
+        '200':
+          description: Recent audit log entries (read-only)
+
+
+  /owner/home-metrics:
+    get:
+      summary: Owner home dashboard metrics (live DB)
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: Submitted/published counts, fundraised poisha, share sales by category, funding progress, unread interest
+  /owner/reports/summary:
+    get:
+      summary: Owner downloadable report summary
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: Total fundraise, published count, shares sold
+  /owner/reports/download.csv:
+    get:
+      summary: Owner report CSV (JSON wrapper or raw=1)
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: CSV body
+  /owner/invest-opportunities:
+    get:
+      summary: Published projects excluding own (Business → Invest)
+      x-roles: [project_owner, investor]
+      responses:
+        '200':
+          description: Marketplace list for dual-role invest
+  /owner/interest-inbox:
+    get:
+      summary: Investor applications for own projects
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: Inbox with unread badge count
+  /owner/interest-inbox/{applicationId}/read:
+    post:
+      summary: Mark interest application read
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Marked read
+  /owner/projects/{projectId}/review-fee:
+    get:
+      summary: Get project review fee receipt/status
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Fee unpaid/submitted/verified/waived
+    post:
+      summary: Submit fictional cash/bank review fee
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMethod, reference]
+              properties:
+                paymentMethod: { type: string, enum: [cash, bank_deposit] }
+                reference: { type: string }
+                receiptNote: { type: string }
+      responses:
+        '200':
+          description: Fee submitted
+  /owner/projects/{projectId}/updates:
+    get:
+      summary: List owner project updates
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updates feed
+    post:
+      summary: Post project update (text/photo URL)
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /projects/{projectId}/updates:
+    get:
+      summary: Investor-visible project updates
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updates for marketplace-visible projects
+  /owner/projects/{projectId}/milestones:
+    get:
+      summary: Use-of-funds milestone checklist
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Milestones
+    post:
+      summary: Create/update milestone
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Upserted
+  /owner/projects/{projectId}/funding-request:
+    post:
+      summary: Request pause or close funding (to Admin)
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestType, reason]
+              properties:
+                requestType: { type: string, enum: [pause, close] }
+                reason: { type: string, minLength: 5 }
+      responses:
+        '201':
+          description: Request queued for admin
+  /owner/projects/{projectId}/export.csv:
+    get:
+      summary: Per-project CSV (applications, paid/remaining units)
+      x-roles: [project_owner]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: CSV export
+  /benchmarks/categories:
+    get:
+      summary: Anonymized category benchmark stub (fictional OK)
+      x-roles: [project_owner, investor, super_admin, project_reviewer]
+      responses:
+        '200':
+          description: Stub averages
+  /admin/review-fee-settings:
+    get:
+      summary: Get configurable project review fee (poisha)
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Default 50000 poisha
+    put:
+      summary: Set project review fee amount
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Updated
+  /admin/project-review-fees:
+    get:
+      summary: List project review fee receipts
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Fee queue
+  /admin/projects/{projectId}/review-fee/verify:
+    post:
+      summary: Verify or waive project review fee
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Verified or waived
+  /admin/funding-requests:
+    get:
+      summary: Owner pause/close funding requests
+      x-roles: [super_admin, project_reviewer]
+      responses:
+        '200':
+          description: Pending requests
+  /admin/funding-requests/{requestId}/review:
+    post:
+      summary: Approve/reject funding pause/close request
+      x-roles: [super_admin, project_reviewer]
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Reviewed
+
+
+  /admin/overview:
+    get:
+      summary: Super Admin live overview totals
+      x-roles: [super_admin, project_reviewer, finance_officer, auditor]
+      responses:
+        '200':
+          description: shareUnitsSold, shareCount, projectCounts, pendingDisbursements
+  /admin/overview/projects:
+    get:
+      summary: Overview project detail list (tab/status filters)
+      x-roles: [super_admin, project_reviewer, finance_officer, auditor]
+      responses:
+        '200':
+          description: Project rows with compliance notes
+  /admin/overview/allocations:
+    get:
+      summary: Overview allocations detail list
+      x-roles: [super_admin, project_reviewer, finance_officer, auditor]
+      responses:
+        '200':
+          description: Active allocations
+  /admin/settings/service-charge:
+    get:
+      summary: Get default administration fee (service charge) bps
+      x-roles: [super_admin]
+      responses:
+        '200':
+          description: administrationFeeBps
+    put:
+      summary: Update default administration fee bps (0-3000)
+      x-roles: [super_admin]
+      responses:
+        '200':
+          description: Updated settings
+  /admin/settings/role-access:
+    get:
+      summary: Role route-group access checklist
+      x-roles: [super_admin]
+      responses:
+        '200':
+          description: byRole / allowlists
+    put:
+      summary: Save role route-group allowlists
+      x-roles: [super_admin]
+      responses:
+        '200':
+          description: Updated checklist
+  /admin/staff-users:
+    post:
+      summary: Create staff user and assign roles
+      x-roles: [super_admin]
+      responses:
+        '201':
+          description: Staff user created (staging)
+  /admin/projects/{id}/share-units:
+    put:
+      summary: Adjust project share/unit count after review (floor reserved+active)
+      x-roles: [super_admin, project_reviewer]
+      responses:
+        '200':
+          description: Updated units
+  /admin/projects/{id}/disbursement-rules:
+    get:
+      summary: Get project disbursement milestone rules
+      x-roles: [super_admin, project_reviewer, finance_officer]
+      responses:
+        '200':
+          description: rules array
+    put:
+      summary: Set disbursement rules before/at publish
+      x-roles: [super_admin, project_reviewer, finance_officer]
+      responses:
+        '200':
+          description: Updated rules
+  /admin/disbursement-requests:
+    get:
+      summary: List owner disbursement requests
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Disbursement request list
+  /admin/disbursement-ledger:
+    get:
+      summary: Staging disbursement ledger (fundsMoved false)
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Ledger summary + entries
+  /admin/disbursement-requests/{id}/start-review:
+    post:
+      summary: Mark disbursement under_review
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Updated request
+  /admin/disbursement-requests/{id}/approve:
+    post:
+      summary: Approve disbursement request
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Approved request
+  /admin/disbursement-requests/{id}/reject:
+    post:
+      summary: Reject disbursement request
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: Rejected request
+  /admin/disbursement-requests/{id}/record-paid:
+    post:
+      summary: Record display-only paid disbursement (fundsMoved false)
+      x-roles: [super_admin, finance_officer, project_reviewer]
+      responses:
+        '200':
+          description: paid_recorded
+  /owner/projects/{id}/disbursement-requests:
+    post:
+      summary: Owner requests disbursement for own project
+      x-roles: [project_owner]
+      responses:
+        '201':
+          description: Request created
+  /owner/disbursement-requests:
+    get:
+      summary: List owner disbursement requests
+      x-roles: [project_owner]
+      responses:
+        '200':
+          description: Owner request list
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    InvestorId:
+      name: investorId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CategoryId:
+      name: categoryId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 100 }
+  schemas:
+    InvestorProfilePatch:
+      type: object
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 120 }
+        phone: { type: string, minLength: 8, maxLength: 20 }
+        dateOfBirth: { type: string, format: date }
+        nationality: { type: string, minLength: 2, maxLength: 80 }
+        occupation: { type: string, minLength: 2, maxLength: 120 }
+        presentAddress: { type: string, minLength: 5, maxLength: 500 }
+        permanentAddress: { type: string, minLength: 5, maxLength: 500 }
+        nomineeName: { type: string, minLength: 2, maxLength: 120 }
+        nomineeRelationship: { type: string, minLength: 2, maxLength: 80 }
+        nomineePhone: { type: string, minLength: 8, maxLength: 20 }
+    InvestorBankUpsert:
+      type: object
+      required: [accountHolderName, bankName, branchName, accountType, accountNumber, routingNumber]
+      properties:
+        accountHolderName: { type: string, minLength: 2, maxLength: 120 }
+        bankName: { type: string, minLength: 2, maxLength: 120 }
+        branchName: { type: string, minLength: 2, maxLength: 120 }
+        accountType: { type: string, enum: [savings, current, other] }
+        accountNumber: { type: string, pattern: '^[0-9]{8,20}$' }
+        routingNumber: { type: string, pattern: '^[0-9A-Za-z]{4,20}$' }
+        mfsType: { type: string, enum: [bkash, nagad, rocket, upay, other], nullable: true }
+        mfsNumber: { type: string, pattern: '^[0-9]{8,15}$', nullable: true }
+    CategoryCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        slug: { type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        description: { type: string, maxLength: 500, nullable: true }
+        iconUrl: { type: string, maxLength: 500, nullable: true }
+        displayOrder: { type: integer, minimum: 0 }
+        isActive: { type: boolean, default: true }
+    CategoryUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        slug: { type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        description: { type: string, maxLength: 500, nullable: true }
+        iconUrl: { type: string, maxLength: 500, nullable: true }
+        displayOrder: { type: integer, minimum: 0 }
+    PaymentSubmission:
+      type: object
+      required: [applicationId, method, amountPoisha, reference]
+      properties:
+        applicationId: { type: string, format: uuid }
+        method: { type: string, enum: [cash, bank_transfer, bkash, sslcommerz] }
+        amountPoisha: { type: integer, minimum: 1 }
+        reference: { type: string, minLength: 3, maxLength: 100 }
+        evidenceId: { type: string, format: uuid }
+  responses:
+    Conflict:
+      description: Current state or inventory conflicts with the request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+
+
+# --- Needful fixes (0.12.1) ---
+# GET /owner/reports/summary.pdf — owner PDF attachment (fictional staging)
+# GET /owner/reports/download.csv — default Content-Disposition attachment; ?format=json for JSON
+# GET /owner/projects/{id}/export.csv — same
+# POST/GET/PUT /owner/projects/{id}/photos — JPEG/PNG private upload + signed URLs
+# GET /projects/{id}/photos — signed URLs for published projects (investors)

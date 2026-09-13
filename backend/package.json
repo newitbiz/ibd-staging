@@ -1,0 +1,28 @@
+{
+  "name": "grow-bangladesh-backend",
+  "version": "0.17.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js",
+    "seed:testers": "node scripts/seed_testers.js",
+    "seed:test-accounts": "node scripts/seed_test_accounts.js",
+    "seed:final-demo": "node scripts/seed_final_demo.js",
+    "db:setup": "node scripts/migrate.js && node scripts/seed.js",
+    "test": "node --test test/domain.test.js test/postgres_contract.test.js test/auth_crypto.test.js test/rate_limit.test.js test/field_encryption.test.js test/application_workflow.test.js test/profit_distributions.test.js test/exit_requests.test.js test/referrals.test.js test/final_demo.test.js test/dashboard_admin_workflow.test.js test/mobile_first_dashboard.test.js test/legal_agreements.test.js",
+    "test:integration": "node --test --test-concurrency=1 test/integration/auth_postgres.test.js test/integration/email_verification.test.js test/integration/concurrent_oversubscription.test.js test/integration/manual_payments_maker_checker.test.js test/integration/categories.test.js test/integration/project_workflow.test.js test/integration/investor_profile_bank.test.js test/integration/application_workflow.test.js test/integration/profit_distributions.test.js test/integration/exit_requests.test.js test/integration/referrals.test.js test/integration/legal_agreements.test.js",
+    "check": "node --check src/server.js && node --check src/postgres_service.js && node --check src/auth_service.js && node --check src/rate_limit.js && node --check src/crypto_util.js && node --check src/roles.js && node --check src/domain.js && node --check src/db.js && node --check src/load_env.js && node --check src/project_workflow.js && node --check src/field_encryption.js && node --check src/investor_profile.js && node --check src/application_workflow.js && node --check src/profit_distributions.js && node --check src/exit_requests.js && node --check src/referrals.js && node --check scripts/migrate.js && node --check scripts/seed.js && node --check scripts/seed_testers.js && node --check scripts/seed_test_accounts.js && node --check scripts/oneshot_seed_boot.js && node --check scripts/concurrent_oversubscription_evidence.js && node --check scripts/collect_phase2_evidence.js && node --check src/email/adapter.js && node --check src/email/templates.js && node --check src/verification_delivery.js && node --check src/document_storage.js && node --check src/project_owner_pack.js && node --check src/investor_pack.js && node --check src/dashboard_admin_workflow.js && node --check src/mobile_first_dashboard.js && node --check src/legal_agreements.js && node --check src/legal/draft_bodies.js && node --check src/super_admin_pack.js && node --check src/final_demo_service.js && node --check scripts/seed_final_demo.js && node --check test/final_demo.test.js && node --check test/integration/email_verification.test.js && node --check test/integration/concurrent_oversubscription.test.js && node --check test/integration/manual_payments_maker_checker.test.js && node --check test/integration/categories.test.js && node --check test/integration/project_workflow.test.js && node --check test/integration/application_workflow.test.js && node --check test/application_workflow.test.js && node --check test/profit_distributions.test.js && node --check test/integration/profit_distributions.test.js && node --check test/exit_requests.test.js && node --check test/integration/exit_requests.test.js && node --check test/referrals.test.js && node --check test/integration/referrals.test.js",
+    "evidence:concurrent": "node scripts/concurrent_oversubscription_evidence.js",
+    "evidence:phase2": "node scripts/collect_phase2_evidence.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.10.1",
+    "pg": "^8.16.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
