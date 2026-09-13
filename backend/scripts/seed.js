@@ -109,7 +109,7 @@ try {
          1500,2500,850000000,
          365,180,
          'Standard marketplace risk disclosure — capital at risk; returns not guaranteed.',
-         'Standard investment terms apply as approved by Invest in Bd staff.',
+         'Standard investment terms apply as approved by Invest in Bangladesh staff.',
          'Early exit subject to minimum hold period and liquidity review. Not a withdrawable balance.',
          1,now(),$5,now(),$5,1
        ) ON CONFLICT (id) DO NOTHING`,

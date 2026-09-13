@@ -1,9 +1,9 @@
 {
   "app_name": "grow_bangladesh",
-  "version": "0.1.29",
-  "build_number": "31",
+  "version": "0.1.30",
+  "build_number": "32",
   "package_name": "grow_bangladesh",
-  "brand": "Invest in Bd",
+  "brand": "Invest in Bangladesh",
   "flavor": "staging",
-  "commit": "2268da5"
+  "commit": "90e823e"
 }

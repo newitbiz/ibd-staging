@@ -1,5 +1,5 @@
 /**
- * Invest in Bd — Legal documents + agreement acceptance.
+ * Invest in Bangladesh — Legal documents + agreement acceptance.
  * Temporary drafts only; block production while legal_review_status != approved.
  */
 import { createHash } from 'node:crypto';
@@ -893,7 +893,7 @@ export function attachLegalAgreementMethods(proto) {
       security_placeholder: p.security_placeholder || '[LEGAL PLACEHOLDER: security]',
       iec_guarantor_status:
         p.iec_guarantor_status ||
-        'Invest in Bd is not a guarantor without a separate approved legal agreement.',
+        'Invest in Bangladesh is not a guarantor without a separate approved legal agreement.',
     };
     const markdown = fillTemplate(template.contentMarkdown, fields);
     return {
@@ -1066,7 +1066,7 @@ export function attachLegalAgreementMethods(proto) {
         const user = await client.query(`SELECT email FROM users WHERE id=$1`, [investorId]);
         await this.emailAdapter.sendMail({
           to: user.rows[0]?.email,
-          subject: 'Invest in Bd — Your project investment agreement (TEST/STAGING)',
+          subject: 'Invest in Bangladesh — Your project investment agreement (TEST/STAGING)',
           text: `Your agreement copy is available in-account. ${DRAFT_BANNER}\nDelivery tracking is recorded; memory of send is not proof of delivery.`,
         });
         await client.query(
@@ -1119,7 +1119,7 @@ export function attachLegalAgreementMethods(proto) {
         if (this.emailAdapter?.sendMail) {
           await this.emailAdapter.sendMail({
             to: user.rows[0]?.email,
-            subject: 'Invest in Bd — Agreement copy resend (TEST/STAGING)',
+            subject: 'Invest in Bangladesh — Agreement copy resend (TEST/STAGING)',
             text: `Resent agreement copy. ${DRAFT_BANNER}`,
           });
           await client.query(

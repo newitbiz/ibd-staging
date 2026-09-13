@@ -1,7 +1,7 @@
 # IBD staging images
 
-Builds and publishes linux/amd64 images for Invest in Bd Railway staging:
-- `ghcr.io/newitbiz/ibd-staging-api:66e7d07`
-- `ghcr.io/newitbiz/ibd-staging-web:66e7d07`
+Builds and publishes linux/amd64 images for Invest in Bangladesh Railway staging:
+- `ghcr.io/newitbiz/ibd-staging/api:8f7e8d1`
+- `ghcr.io/newitbiz/ibd-staging/web:8f7e8d1`
 
-Source commit: grow-bangladesh-platform@66e7d07 (web assets patched to IBD API domain).
+Source commit: grow-bangladesh-platform@8f7e8d1 (web assets pointed at IBD API api-production-3ebf).

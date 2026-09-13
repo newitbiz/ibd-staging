@@ -30,7 +30,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/${{ matrix.name }}:66e7d07
+            ghcr.io/${{ github.repository }}/${{ matrix.name }}:8f7e8d1
             ghcr.io/${{ github.repository }}/${{ matrix.name }}:latest
       - name: Ensure public visibility
         env:

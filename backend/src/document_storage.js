@@ -183,7 +183,7 @@ export function buildFictionalPlaceholderPdf({ title, bodyLines = [] }) {
   // Minimal multi-line PDF for demo downloads (not a full PDF writer).
   const lines = [
     FICTIONAL_BANNER,
-    title || 'Invest in Bd Fictional Agreement',
+    title || 'Invest in Bangladesh Fictional Agreement',
     ...bodyLines,
   ].map((l) => String(l ?? '').replace(/[()\\]/g, ' ').slice(0, 110));
 

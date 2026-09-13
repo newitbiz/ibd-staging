@@ -61,8 +61,8 @@ export function buildProjectSharePayload({
     ? `${base}${path}?ref=${encodeURIComponent(code)}`
     : `${base}${path}`;
   const shareText = code
-    ? `Explore ${projectTitle || 'this project'} on Invest in Bd. Referral code ${code}: ${url}`
-    : `Explore ${projectTitle || 'this project'} on Invest in Bd: ${url}`;
+    ? `Explore ${projectTitle || 'this project'} on Invest in Bangladesh. Referral code ${code}: ${url}`
+    : `Explore ${projectTitle || 'this project'} on Invest in Bangladesh: ${url}`;
   return {
     projectId,
     projectTitle: projectTitle || null,

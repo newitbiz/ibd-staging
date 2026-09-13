@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Invest in Bd API
+  title: Invest in Bangladesh API
   version: 0.15.0
   description: MVP contract including Investor pack (home, Approved referral reward payout requests, apply-to-shares, support messages, KYC change reason), Super Admin pack, and Project Owner pack. Integer poisha + bps. Staging only. fundsMoved:false. No wallet language.
 servers:

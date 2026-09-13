@@ -46,7 +46,7 @@ export class SmtpEmailAdapter {
     this.username = config.username ?? process.env.SMTP_USERNAME ?? '';
     this.password = config.password ?? process.env.SMTP_PASSWORD ?? '';
     this.fromEmail = config.fromEmail || process.env.SMTP_FROM_EMAIL;
-    this.fromName = config.fromName || process.env.SMTP_FROM_NAME || 'Invest in Bd';
+    this.fromName = config.fromName || process.env.SMTP_FROM_NAME || 'Invest in Bangladesh';
     this.replyTo = config.replyTo || process.env.SMTP_REPLY_TO || 'support@investinbd.net';
     this.secure = config.secure ?? this.port === 465;
     this._transporter = null;

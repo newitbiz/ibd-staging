@@ -16,9 +16,9 @@ function readSecret(name) {
 }
 
 const accounts = {
-  admin: { email: 'admin-test@growbangladesh.test', password: readSecret('TEST_ADMIN_PASSWORD.txt') },
-  owner: { email: 'owner-test@growbangladesh.test', password: readSecret('TEST_OWNER_PASSWORD.txt') },
-  investor: { email: 'investor-test@growbangladesh.test', password: readSecret('TEST_INVESTOR_PASSWORD.txt') },
+  admin: { email: 'admin-test@investinbd.net', password: readSecret('TEST_ADMIN_PASSWORD.txt') },
+  owner: { email: 'owner-test@investinbd.net', password: readSecret('TEST_OWNER_PASSWORD.txt') },
+  investor: { email: 'investor-test@investinbd.net', password: readSecret('TEST_INVESTOR_PASSWORD.txt') },
 };
 
 // Prefer emails from test_accounts.json if present
@@ -100,7 +100,7 @@ async function main() {
   // 1 Admin creates investor
   let createdInvestor;
   try {
-    const email = `admin-created-${Date.now()}@growbangladesh.test`;
+    const email = `admin-created-${Date.now()}@investinbd.net`;
     createdInvestor = await api('POST', '/admin/investors', {
       token: adminTok,
       body: {

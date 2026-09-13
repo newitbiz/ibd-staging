@@ -1,6 +1,6 @@
 /**
  * Email verification message templates (TEST/STAGING).
- * Invest in Bd (IBD).
+ * Invest in Bangladesh (IBD).
  * No investment promises. Never include secrets beyond the one-time code/link.
  */
 
@@ -23,10 +23,10 @@ function emailHeaderDataUri() {
 }
 
 export function buildEmailVerificationMessage({ code, verifyUrl, expiresMinutes = 10 }) {
-  const subject = 'Verify your Invest in Bd email';
+  const subject = 'Verify your Invest in Bangladesh email';
   const text = [
-    'Invest in Bd — TEST/STAGING',
-    'https://investinbd.net · support@investinbd.net',
+    'Invest in Bangladesh — TEST/STAGING',
+    'https://www.investinbd.net · support@investinbd.net',
     '',
     'Use this 6-digit code to verify your email:',
     String(code),
@@ -44,21 +44,21 @@ export function buildEmailVerificationMessage({ code, verifyUrl, expiresMinutes 
   const headerUri = emailHeaderDataUri();
   const headerBlock = headerUri
     ? `<tr><td style="background:#0698AF;padding:16px 20px;text-align:center;">
-          <img src="${headerUri}" alt="Invest in Bd" width="280" style="max-width:100%;height:auto;display:inline-block;" />
+          <img src="${headerUri}" alt="Invest in Bangladesh" width="280" style="max-width:100%;height:auto;display:inline-block;" />
         </td></tr>`
     : '';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verify your Invest in Bd email</title></head>
+<title>Verify your Invest in Bangladesh email</title></head>
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f6f8;padding:24px 12px;">
     <tr><td align="center">
       <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
         ${headerBlock}
         <tr><td style="background:#b45309;color:#ffffff;padding:12px 20px;font-size:13px;font-weight:700;text-align:center;">
-          Invest in Bd — TEST/STAGING
+          Invest in Bangladesh — TEST/STAGING
         </td></tr>
         <tr><td style="padding:28px 24px;">
           <h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Verify your email</h1>

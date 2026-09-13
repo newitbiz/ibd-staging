@@ -105,7 +105,7 @@ try {
 
     const adminId = await upsertUser(client, {
       id: ids.admin,
-      email: 'admin-test@growbangladesh.test',
+      email: 'admin-test@investinbd.net',
       password: process.env.TEST_ADMIN_PASSWORD,
       roles: [ROLES.SUPER_ADMIN, ROLES.COMPLIANCE_REVIEWER, ROLES.FINANCE_OFFICER, ROLES.SUPPORT, ROLES.PROJECT_REVIEWER],
       displayName: 'Staging Super Admin',
@@ -113,7 +113,7 @@ try {
     });
     const ownerId = await upsertUser(client, {
       id: ids.owner,
-      email: 'owner-test@growbangladesh.test',
+      email: 'owner-test@investinbd.net',
       password: process.env.TEST_OWNER_PASSWORD,
       roles: [ROLES.PROJECT_OWNER],
       displayName: 'Fictional Owner Ayesha Rahman',
@@ -121,7 +121,7 @@ try {
     });
     const investorId = await upsertUser(client, {
       id: ids.investor,
-      email: 'investor-test@growbangladesh.test',
+      email: 'investor-test@investinbd.net',
       password: process.env.TEST_INVESTOR_PASSWORD,
       roles: [ROLES.INVESTOR],
       displayName: 'Fictional Investor Karim Hossain',
@@ -184,7 +184,7 @@ try {
          verification_status, trade_name, registered_address, business_phone, business_email, business_type,
          business_status, business_verification_pct, is_fictional_demo)
        VALUES ($1,$2,'Green Valley Agro Ltd (FICTIONAL)','REG-FICTION-001','TL-FICTION-001','TIN-FICTION','BIN-FICTION',
-         'verified','Green Valley (FICTIONAL)','Gazipur (FICTIONAL)','+8801800000000','biz-fictional@growbangladesh.test','agro',
+         'verified','Green Valley (FICTIONAL)','Gazipur (FICTIONAL)','+8801800000000','biz-fictional@investinbd.net','agro',
          'verified',100,true)
        ON CONFLICT (id) DO UPDATE SET
          owner_user_id=EXCLUDED.owner_user_id, verification_status='verified', business_status='verified',
@@ -434,7 +434,7 @@ try {
 
   console.log(JSON.stringify({
     ok: true,
-    accounts: ['admin-test@growbangladesh.test', 'owner-test@growbangladesh.test', 'investor-test@growbangladesh.test'],
+    accounts: ['admin-test@investinbd.net', 'owner-test@investinbd.net', 'investor-test@investinbd.net'],
     calc,
     fictionalBanner: FICTIONAL_BANNER,
     phoneOtpLabel: STAGING_PHONE_OTP_LABEL,

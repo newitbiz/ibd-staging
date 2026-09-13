@@ -91,7 +91,7 @@ function runNode(args, env = {}) {
 
 async function main() {
   const evidence = {
-    title: 'Grow Bangladesh Phase-2 auth + Postgres evidence',
+    title: 'Invest in Bangladesh Phase-2 auth + Postgres evidence',
     capturedAt: new Date().toISOString(),
     capturedAtAsiaDhakaNote: 'Convert UTC timestamps to Asia/Dhaka (UTC+6) when reporting to user',
     baseUrl: API,

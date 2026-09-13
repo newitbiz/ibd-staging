@@ -1,11 +1,11 @@
 {
-    "name": "Invest in Bd \u2014 TEST",
+    "name": "Invest in Bangladesh \u2014 TEST",
     "short_name": "IBD",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0698AF",
     "theme_color": "#0A7582",
-    "description": "Invest in Bd (IBD) \u2014 TEST/STAGING.",
+    "description": "Invest in Bangladesh (IBD) \u2014 TEST/STAGING.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

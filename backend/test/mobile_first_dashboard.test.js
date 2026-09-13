@@ -48,7 +48,7 @@ test('project share payload excludes owner PII and embeds referral code', () => 
   assert.equal(p.containsOwnerPii, false);
   assert.match(p.shareUrl, /ref=IEC-ABCD/);
   assert.doesNotMatch(p.shareText, /@|phone|\+880/i);
-  assert.match(p.shareText, /Invest in Bd/);
+  assert.match(p.shareText, /Invest in Bangladesh/);
 });
 
 test('share without referral code still has no owner PII', () => {

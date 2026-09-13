@@ -1,4 +1,4 @@
-# Invest in Bd PostgreSQL Backend
+# Invest in Bangladesh PostgreSQL Backend
 
 Version 0.3 adds JWT authentication, rotating refresh tokens, OTP verification, password reset, server-side role enforcement, migrations for auth tables, integration tests, and CI. Financial rules from the MVP handoff are unchanged.
 

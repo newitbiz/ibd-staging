@@ -454,9 +454,9 @@ export function attachDashboardAdminWorkflowMethods(proto) {
         const isMemory = adapter.constructor?.name === 'MemoryEmailAdapter' || !process.env.SMTP_HOST;
         await adapter.send({
           to: email,
-          subject: 'Invest in Bd — Admin-created account invitation (TEST/STAGING)',
-          text: `Hello ${fullName},\n\nA Super Admin created an Invest in Bd investor account for you (Admin-created account).\nYou must change your temporary password at first login.\nThis does NOT mean KYC/NID/phone are verified.\n\nEmail: ${email}\nTemporary password: ${result._temporaryPassword}\n\nStaging only — fictional TEST environment.`,
-          html: `<p>Hello ${fullName},</p><p>A Super Admin created an <strong>Admin-created account</strong> for you on Invest in Bd (TEST/STAGING).</p><p>You must change your temporary password at first login. <em>Activation ≠ KYC</em> — NID/selfie/phone remain unverified.</p><p>Email: ${email}<br/>Temporary password: <code>${result._temporaryPassword}</code></p>`,
+          subject: 'Invest in Bangladesh — Admin-created account invitation (TEST/STAGING)',
+          text: `Hello ${fullName},\n\nA Super Admin created an Invest in Bangladesh investor account for you (Admin-created account).\nYou must change your temporary password at first login.\nThis does NOT mean KYC/NID/phone are verified.\n\nEmail: ${email}\nTemporary password: ${result._temporaryPassword}\n\nStaging only — fictional TEST environment.`,
+          html: `<p>Hello ${fullName},</p><p>A Super Admin created an <strong>Admin-created account</strong> for you on Invest in Bangladesh (TEST/STAGING).</p><p>You must change your temporary password at first login. <em>Activation ≠ KYC</em> — NID/selfie/phone remain unverified.</p><p>Email: ${email}<br/>Temporary password: <code>${result._temporaryPassword}</code></p>`,
         });
         inviteEmail = {
           sent: true,

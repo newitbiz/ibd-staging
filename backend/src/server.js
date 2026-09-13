@@ -2612,7 +2612,7 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, host, () => {
   console.log(
-    `Invest in Bd backend listening on http://${host}:${port} (${usePostgres ? 'postgresql' : 'in-memory demo'}; auth=${usePostgres ? (allowDevUserHeader ? 'jwt+dev-header' : 'jwt') : 'n/a'})`,
+    `Invest in Bangladesh backend listening on http://${host}:${port} (${usePostgres ? 'postgresql' : 'in-memory demo'}; auth=${usePostgres ? (allowDevUserHeader ? 'jwt+dev-header' : 'jwt') : 'n/a'})`,
   );
 });
 

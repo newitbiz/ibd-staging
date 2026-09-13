@@ -19,21 +19,21 @@ if (missing.length) {
 
 const accounts = [
   {
-    email: 'admin-test@growbangladesh.test',
+    email: 'admin-test@investinbd.net',
     passwordEnv: 'TEST_ADMIN_PASSWORD',
     roles: [ROLES.SUPER_ADMIN, ROLES.COMPLIANCE_REVIEWER, ROLES.FINANCE_OFFICER, ROLES.SUPPORT],
     fullName: 'Staging Super Admin',
     kind: 'admin',
   },
   {
-    email: 'owner-test@growbangladesh.test',
+    email: 'owner-test@investinbd.net',
     passwordEnv: 'TEST_OWNER_PASSWORD',
     roles: [ROLES.PROJECT_OWNER, ROLES.INVESTOR],
     fullName: 'Staging Project Owner',
     kind: 'owner',
   },
   {
-    email: 'investor-test@growbangladesh.test',
+    email: 'investor-test@investinbd.net',
     passwordEnv: 'TEST_INVESTOR_PASSWORD',
     roles: [ROLES.INVESTOR],
     fullName: 'Staging Investor',
@@ -138,7 +138,7 @@ try {
     }
   });
   console.log(
-    `Test accounts seed: created=${created} updated=${updated} emails=admin-test/owner-test/investor-test@growbangladesh.test. Passwords not logged.`,
+    `Test accounts seed: created=${created} updated=${updated} emails=admin-test/owner-test/investor-test@investinbd.net. Passwords not logged.`,
   );
 } finally {
   await closePool(pool);

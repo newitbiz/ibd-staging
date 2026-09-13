@@ -1,5 +1,5 @@
 /**
- * Temporary staging draft bodies for Invest in Bd legal documents.
+ * Temporary staging draft bodies for Invest in Bangladesh legal documents.
  * NEVER claim these are lawyer-approved. Label clearly for legal review.
  */
 
@@ -32,10 +32,10 @@ export const TEMPORARY_DRAFTS = Object.freeze({
 
 # Investor Agreement
 
-**Parties.** This Investor Agreement is between **${COMPANY_PLACEHOLDERS.legalName}** ("Invest in Bd" / "Platform") and you ("Investor").
+**Parties.** This Investor Agreement is between **${COMPANY_PLACEHOLDERS.legalName}** ("Invest in Bangladesh" / "Platform") and you ("Investor").
 
 ## 1. Nature of the Platform
-Invest in Bd is a project-participation marketplace that connects Investors with Project Owners. Listing a project or accepting an application does **not** mean Invest in Bd endorses, underwrites, or guarantees any project outcome.
+Invest in Bangladesh is a project-participation marketplace that connects Investors with Project Owners. Listing a project or accepting an application does **not** mean Invest in Bangladesh endorses, underwrites, or guarantees any project outcome.
 
 ## 2. Eligibility & Account
 You must provide accurate identity and contact information. Admin-created accounts still require **your personal** acceptance of these terms at first login. An administrator cannot accept for you.
@@ -47,21 +47,21 @@ Each purchase requires a separate **Project Investment Agreement** generated fro
 Administration / service fees are disclosed before payment and are separate from investment principal. Fee amounts are shown in the purchase flow.
 
 ## 5. No Advice
-Nothing on Invest in Bd is investment, legal, tax, or Shariah advice. You are solely responsible for your decisions.
+Nothing on Invest in Bangladesh is investment, legal, tax, or Shariah advice. You are solely responsible for your decisions.
 
 ## 6. Risk Acknowledgment (companion section)
 **You acknowledge that:**
 1. **Capital may be partially or entirely lost.** There is no blanket principal guarantee.
 2. **Projected returns are illustrative estimates only and are not guaranteed.**
 3. Project performance, delays, defaults, and market conditions can reduce or eliminate returns.
-4. Invest in Bd is **not a guarantor** of principal or return unless a separate lawyer-approved guarantee agreement exists.
+4. Invest in Bangladesh is **not a guarantor** of principal or return unless a separate lawyer-approved guarantee agreement exists.
 5. Repayment debtor / security (if any) are stated only in the project-specific agreement placeholders and must be completed by counsel:
    - Repayment debtor: \`[LEGAL PLACEHOLDER: repayment debtor legal name]\`
    - Security: \`[LEGAL PLACEHOLDER: security / collateral description — none unless separately agreed]\`
 6. Viewing or scrolling this document does **not** by itself prove understanding; you must actively confirm acceptance.
 
 ## 7. Evidence of Acceptance
-When you tick "I agree" after viewing, Invest in Bd stores immutable evidence (agreement id, version, content hash, user id, role, server timestamp, language, acceptance method, and exact snapshot). **Evidence logging is not a certified electronic signature.**
+When you tick "I agree" after viewing, Invest in Bangladesh stores immutable evidence (agreement id, version, content hash, user id, role, server timestamp, language, acceptance method, and exact snapshot). **Evidence logging is not a certified electronic signature.**
 
 ## 8. Privacy
 Personal data is processed under the separate **Privacy Notice**, which you must also accept.
@@ -86,7 +86,7 @@ ${COMPANY_PLACEHOLDERS.contactEmail}
 
 - মূলধন হারানোর ঝুঁকি থাকতে পারে।
 - প্রজেক্টেড রিটার্ন নিশ্চিত নয়।
-- Invest in Bd গ্যারান্টর নয় (আলাদা অনুমোদিত চুক্তি ছাড়া)।
+- Invest in Bangladesh গ্যারান্টর নয় (আলাদা অনুমোদিত চুক্তি ছাড়া)।
 
 *${DRAFT_BANNER} — Bangla pending lawyer review*
 `,
@@ -108,7 +108,7 @@ You may create and submit projects for review. Publication requires Platform app
 You must keep project information accurate, including funding status, milestones, and material adverse changes. Investors rely on your disclosures.
 
 ## 3. Instrument & Principal
-Each project must state an \`instrument_type\`. **There is no blanket principal guarantee.** Invest in Bd is not a guarantor without a separate approved legal agreement. Repayment debtor and security fields are legal placeholders until counsel completes them.
+Each project must state an \`instrument_type\`. **There is no blanket principal guarantee.** Invest in Bangladesh is not a guarantor without a separate approved legal agreement. Repayment debtor and security fields are legal placeholders until counsel completes them.
 
 ## 4. Fees & Disbursements
 Platform fees, review fees, and disbursement rules (if any) apply as configured by Super Admin and disclosed in-product.

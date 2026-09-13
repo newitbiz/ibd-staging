@@ -17,9 +17,9 @@ function readSecret(name) {
 }
 
 const accounts = {
-  admin: { email: 'admin-test@growbangladesh.test', password: readSecret('TEST_ADMIN_PASSWORD.txt') },
-  owner: { email: 'owner-test@growbangladesh.test', password: readSecret('TEST_OWNER_PASSWORD.txt') },
-  investor: { email: 'investor-test@growbangladesh.test', password: readSecret('TEST_INVESTOR_PASSWORD.txt') },
+  admin: { email: 'admin-test@investinbd.net', password: readSecret('TEST_ADMIN_PASSWORD.txt') },
+  owner: { email: 'owner-test@investinbd.net', password: readSecret('TEST_OWNER_PASSWORD.txt') },
+  investor: { email: 'investor-test@investinbd.net', password: readSecret('TEST_INVESTOR_PASSWORD.txt') },
 };
 try {
   const j = JSON.parse(fs.readFileSync(path.join(SECRETS, 'test_accounts.json'), 'utf8'));
