@@ -13,11 +13,9 @@ jobs:
       matrix:
         include:
           - context: backend
-            image: ibd-staging-api
-            alt: ibd-staging/api
+            name: api
           - context: web
-            image: ibd-staging-web
-            alt: ibd-staging/web
+            name: web
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -32,17 +30,13 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/newitbiz/${{ matrix.image }}:66e7d07
-            ghcr.io/newitbiz/${{ matrix.alt }}:66e7d07
-            ghcr.io/${{ github.repository }}/${{ matrix.context }}:66e7d07
+            ghcr.io/${{ github.repository }}/${{ matrix.name }}:66e7d07
+            ghcr.io/${{ github.repository }}/${{ matrix.name }}:latest
       - name: Ensure public visibility
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for p in "${{ matrix.image }}" "${{ matrix.alt }}"; do
-            enc=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$p")
-            echo "Trying visibility for $p ($enc)"
-            gh api --method POST "/user/packages/container/${enc}/visibility" -f visibility=public || true
-            gh api --method PATCH "/user/packages/container/${enc}" -f visibility=public || true
-            gh api "/user/packages/container/${enc}" --jq '{name,visibility}' || true
-          done
+          enc=$(python3 -c "import urllib.parse; print(urllib.parse.quote('ibd-staging/${{ matrix.name }}', safe=''))")
+          gh api --method POST "/user/packages/container/${enc}/visibility" -f visibility=public || true
+          gh api --method PATCH "/user/packages/container/${enc}" -f visibility=public || true
+          gh api "/user/packages/container/${enc}" --jq '{name,visibility}' || true
